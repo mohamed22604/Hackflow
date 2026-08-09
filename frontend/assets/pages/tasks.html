@@ -1,0 +1,789 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>HackFlow - Tasks</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
+        }
+
+        body {
+            background: #f5f6f8;
+            color: #1f2937;
+            min-height: 100vh;
+        }
+
+        .container {
+            width: 90%;
+            max-width: 1100px;
+            margin: 40px auto;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            font-size: 32px;
+        }
+
+        .header p {
+            color: #6b7280;
+            margin-top: 6px;
+        }
+
+        .btn {
+            border: none;
+            padding: 11px 18px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: bold;
+        }
+
+        .btn-primary {
+            background: #111827;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #374151;
+        }
+
+        .btn-danger {
+            background: #ef4444;
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: #dc2626;
+        }
+
+        .btn-secondary {
+            background: #e5e7eb;
+            color: #111827;
+        }
+
+        .btn-secondary:hover {
+            background: #d1d5db;
+        }
+
+        /* Create Task */
+
+        .create-task {
+            background: white;
+            padding: 25px;
+            border-radius: 12px;
+            margin-bottom: 30px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+        }
+
+        .create-task h2 {
+            margin-bottom: 20px;
+        }
+
+        .form-group {
+            margin-bottom: 16px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 7px;
+            font-weight: bold;
+            font-size: 14px;
+        }
+
+        .form-group input,
+        .form-group textarea {
+            width: 100%;
+            padding: 11px;
+            border: 1px solid #d1d5db;
+            border-radius: 7px;
+            font-size: 14px;
+            outline: none;
+        }
+
+        .form-group input:focus,
+        .form-group textarea:focus {
+            border-color: #111827;
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 90px;
+        }
+
+        /* Tasks */
+
+        .tasks-section h2 {
+            margin-bottom: 18px;
+        }
+
+        #tasks-container {
+            display: grid;
+            gap: 15px;
+        }
+
+        .task-card {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+        }
+
+        .task-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 20px;
+        }
+
+        .task-title {
+            font-size: 20px;
+            font-weight: bold;
+            margin-bottom: 8px;
+        }
+
+        .task-description {
+            color: #6b7280;
+            line-height: 1.5;
+        }
+
+        .status {
+            padding: 6px 10px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: bold;
+            white-space: nowrap;
+        }
+
+        .status-todo {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .status-in-progress {
+            background: #dbeafe;
+            color: #1e40af;
+        }
+
+        .status-done {
+            background: #dcfce7;
+            color: #166534;
+        }
+
+        .task-info {
+            margin-top: 15px;
+            color: #6b7280;
+            font-size: 13px;
+        }
+
+        .task-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 18px;
+            align-items: center;
+        }
+
+        .status-select {
+            padding: 9px;
+            border: 1px solid #d1d5db;
+            border-radius: 7px;
+            background: white;
+        }
+
+        .message {
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            display: none;
+        }
+
+        .success {
+            background: #dcfce7;
+            color: #166534;
+        }
+
+        .error {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .empty {
+            background: white;
+            padding: 40px;
+            text-align: center;
+            border-radius: 12px;
+            color: #6b7280;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 30px;
+            color: #6b7280;
+        }
+
+        @media (max-width: 700px) {
+            .header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 15px;
+            }
+
+            .task-top {
+                flex-direction: column;
+            }
+
+            .task-actions {
+                flex-wrap: wrap;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="container">
+
+    <!-- Header -->
+
+    <div class="header">
+        <div>
+            <h1>Tasks</h1>
+            <p>Manage your team's tasks and progress.</p>
+        </div>
+    </div>
+
+    <!-- Messages -->
+
+    <div id="message" class="message"></div>
+
+    <!-- Create Task -->
+
+    <div class="create-task">
+
+        <h2>Create Task</h2>
+
+        <form id="task-form">
+
+            <div class="form-group">
+                <label for="title">Task Title</label>
+
+                <input
+                    type="text"
+                    id="title"
+                    placeholder="e.g. Build Login API"
+                    required
+                >
+            </div>
+
+            <div class="form-group">
+                <label for="description">Description</label>
+
+                <textarea
+                    id="description"
+                    placeholder="Describe the task..."
+                ></textarea>
+            </div>
+
+            <div class="form-group">
+                <label for="member_id">Member ID</label>
+
+                <input
+                    type="number"
+                    id="member_id"
+                    placeholder="Enter member ID"
+                >
+            </div>
+
+            <button
+                type="submit"
+                class="btn btn-primary"
+            >
+                Create Task
+            </button>
+
+        </form>
+
+    </div>
+
+    <!-- Tasks -->
+
+    <div class="tasks-section">
+
+        <h2>Team Tasks</h2>
+
+        <div id="tasks-container">
+            <div class="loading">
+                Loading tasks...
+            </div>
+        </div>
+
+    </div>
+
+</div>
+
+
+<script>
+
+    /*
+     * Change this URL if your FastAPI server
+     * uses a different address.
+     */
+
+    const API_URL = "http://127.0.0.1:8000";
+
+
+    // =========================
+    // ELEMENTS
+    // =========================
+
+    const taskForm = document.getElementById("task-form");
+    const tasksContainer = document.getElementById("tasks-container");
+    const messageBox = document.getElementById("message");
+
+
+    // =========================
+    // MESSAGE
+    // =========================
+
+    function showMessage(message, type) {
+
+        messageBox.textContent = message;
+
+        messageBox.className = "message " + type;
+
+        messageBox.style.display = "block";
+
+        setTimeout(() => {
+            messageBox.style.display = "none";
+        }, 3000);
+    }
+
+
+    // =========================
+    // LOAD TASKS
+    // =========================
+
+    async function loadTasks() {
+
+        tasksContainer.innerHTML = `
+            <div class="loading">
+                Loading tasks...
+            </div>
+        `;
+
+        try {
+
+            const response = await fetch(`${API_URL}/tasks/`);
+
+            if (!response.ok) {
+                throw new Error("Failed to load tasks");
+            }
+
+            const tasks = await response.json();
+
+            displayTasks(tasks);
+
+        } catch (error) {
+
+            console.error(error);
+
+            tasksContainer.innerHTML = `
+                <div class="empty">
+                    Failed to load tasks.
+                </div>
+            `;
+
+            showMessage(
+                "Could not connect to the API.",
+                "error"
+            );
+        }
+    }
+
+
+    // =========================
+    // DISPLAY TASKS
+    // =========================
+
+    function displayTasks(tasks) {
+
+        if (tasks.length === 0) {
+
+            tasksContainer.innerHTML = `
+                <div class="empty">
+                    No tasks yet.
+                </div>
+            `;
+
+            return;
+        }
+
+
+        tasksContainer.innerHTML = "";
+
+
+        tasks.forEach(task => {
+
+            const card = document.createElement("div");
+
+            card.className = "task-card";
+
+
+            const statusClass =
+                task.status === "done"
+                    ? "status-done"
+                    : task.status === "in_progress"
+                        ? "status-in-progress"
+                        : "status-todo";
+
+
+            const statusText =
+                task.status === "in_progress"
+                    ? "In Progress"
+                    : task.status.charAt(0).toUpperCase()
+                        + task.status.slice(1);
+
+
+            card.innerHTML = `
+
+                <div class="task-top">
+
+                    <div>
+
+                        <div class="task-title">
+                            ${escapeHtml(task.title)}
+                        </div>
+
+                        <div class="task-description">
+                            ${escapeHtml(
+                                task.description || "No description"
+                            )}
+                        </div>
+
+                    </div>
+
+                    <span class="status ${statusClass}">
+                        ${statusText}
+                    </span>
+
+                </div>
+
+
+                <div class="task-info">
+
+                    Task ID: ${task.id}
+
+                    <br>
+
+                    Member:
+                    ${task.member_id ?? "Unassigned"}
+
+                </div>
+
+
+                <div class="task-actions">
+
+                    <select
+                        class="status-select"
+                        onchange="updateStatus(${task.id}, this.value)"
+                    >
+
+                        <option
+                            value="todo"
+                            ${task.status === "todo" ? "selected" : ""}
+                        >
+                            Todo
+                        </option>
+
+                        <option
+                            value="in_progress"
+                            ${task.status === "in_progress" ? "selected" : ""}
+                        >
+                            In Progress
+                        </option>
+
+                        <option
+                            value="done"
+                            ${task.status === "done" ? "selected" : ""}
+                        >
+                            Done
+                        </option>
+
+                    </select>
+
+
+                    <button
+                        class="btn btn-danger"
+                        onclick="deleteTask(${task.id})"
+                    >
+                        Delete
+                    </button>
+
+                </div>
+
+            `;
+
+
+            tasksContainer.appendChild(card);
+
+        });
+
+    }
+
+
+    // =========================
+    // CREATE TASK
+    // =========================
+
+    taskForm.addEventListener("submit", async function(event) {
+
+        event.preventDefault();
+
+
+        const title =
+            document.getElementById("title").value.trim();
+
+
+        const description =
+            document.getElementById("description").value.trim();
+
+
+        const memberId =
+            document.getElementById("member_id").value;
+
+
+        /*
+         * Your current API requires team_id.
+         *
+         * Since HackFlow currently has one team,
+         * we use team_id = 1 for the MVP.
+         */
+
+        const taskData = {
+
+            title: title,
+
+            description:
+                description || null,
+
+            team_id: 1,
+
+            member_id:
+                memberId
+                    ? Number(memberId)
+                    : null
+
+        };
+
+
+        try {
+
+            const response = await fetch(
+                `${API_URL}/tasks/`,
+                {
+                    method: "POST",
+
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+
+                    body: JSON.stringify(taskData)
+                }
+            );
+
+
+            if (!response.ok) {
+
+                const errorData =
+                    await response.json();
+
+                throw new Error(
+                    errorData.detail ||
+                    "Failed to create task"
+                );
+            }
+
+
+            await response.json();
+
+
+            taskForm.reset();
+
+
+            showMessage(
+                "Task created successfully.",
+                "success"
+            );
+
+
+            loadTasks();
+
+        } catch (error) {
+
+            console.error(error);
+
+            showMessage(
+                error.message,
+                "error"
+            );
+        }
+
+    });
+
+
+    // =========================
+    // UPDATE STATUS
+    // =========================
+
+    async function updateStatus(taskId, status) {
+
+        try {
+
+            const response = await fetch(
+                `${API_URL}/tasks/${taskId}`,
+                {
+                    method: "PATCH",
+
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+
+                    body: JSON.stringify({
+                        status: status
+                    })
+                }
+            );
+
+
+            if (!response.ok) {
+
+                const errorData =
+                    await response.json();
+
+                throw new Error(
+                    errorData.detail ||
+                    "Failed to update task"
+                );
+            }
+
+
+            showMessage(
+                "Task updated successfully.",
+                "success"
+            );
+
+
+            loadTasks();
+
+        } catch (error) {
+
+            console.error(error);
+
+            showMessage(
+                error.message,
+                "error"
+            );
+
+            loadTasks();
+        }
+
+    }
+
+
+    // =========================
+    // DELETE TASK
+    // =========================
+
+    async function deleteTask(taskId) {
+
+        const confirmed =
+            confirm(
+                "Are you sure you want to delete this task?"
+            );
+
+
+        if (!confirmed) {
+            return;
+        }
+
+
+        try {
+
+            const response = await fetch(
+                `${API_URL}/tasks/${taskId}`,
+                {
+                    method: "DELETE"
+                }
+            );
+
+
+            if (!response.ok) {
+
+                const errorData =
+                    await response.json();
+
+                throw new Error(
+                    errorData.detail ||
+                    "Failed to delete task"
+                );
+            }
+
+
+            showMessage(
+                "Task deleted successfully.",
+                "success"
+            );
+
+
+            loadTasks();
+
+        } catch (error) {
+
+            console.error(error);
+
+            showMessage(
+                error.message,
+                "error"
+            );
+        }
+
+    }
+
+
+    // =========================
+    // HTML ESCAPE
+    // =========================
+
+    function escapeHtml(value) {
+
+        const div =
+            document.createElement("div");
+
+        div.textContent = value;
+
+        return div.innerHTML;
+    }
+
+
+    // =========================
+    // INITIAL LOAD
+    // =========================
+
+    loadTasks();
+
+</script>
+
+</body>
+</html>

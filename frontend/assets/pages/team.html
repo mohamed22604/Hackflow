@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>HackFlow - Create Team</title>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #f5f5f5;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+        }
+
+        .container {
+            background: white;
+            width: 350px;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            margin-top: 0;
+        }
+
+        input {
+            width: 100%;
+            padding: 10px;
+            margin: 8px 0 15px;
+            box-sizing: border-box;
+        }
+
+        button {
+            width: 100%;
+            padding: 11px;
+            border: none;
+            border-radius: 6px;
+            background: black;
+            color: white;
+            cursor: pointer;
+        }
+
+        #result {
+            margin-top: 20px;
+            padding: 10px;
+            background: #f0f0f0;
+            display: none;
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="container">
+
+    <h1>Create Team</h1>
+
+    <form id="teamForm">
+
+        <label>Team Name</label>
+        <input
+            type="text"
+            id="teamName"
+            placeholder="Enter team name"
+            required
+        >
+
+        <label>Your Name</label>
+        <input
+            type="text"
+            id="leaderName"
+            placeholder="Enter your name"
+            required
+        >
+
+        <button type="submit">
+            Create Team
+        </button>
+
+    </form>
+
+    <div id="result"></div>
+
+</div>
+
+
+<script>
+
+const form = document.getElementById("teamForm");
+const result = document.getElementById("result");
+
+form.addEventListener("submit", async function(event) {
+
+    event.preventDefault();
+
+    const teamName = document.getElementById("teamName").value;
+    const leaderName = document.getElementById("leaderName").value;
+
+    try {
+
+        const response = await fetch("http://127.0.0.1:8000/teams/", {
+
+            method: "POST",
+
+            headers: {
+                "Content-Type": "application/json"
+            },
+
+            body: JSON.stringify({
+                team_name: teamName,
+                leader_name: leaderName
+            })
+
+        });
+
+        const data = await response.json();
+
+        localStorage.setItem("team_id", data.id);
+
+        window.location.href = "/assets/pages/team_dashboard.html";
+
+        if (!response.ok) {
+            throw new Error(data.detail || "Failed to create team");
+        }
+
+        result.style.display = "block";
+
+        result.innerHTML = `
+            <strong>Team created successfully!</strong>
+
+            <p>Team: ${data.name}</p>
+
+            <p>Leader: ${data.leader.name}</p>
+
+            <p>Role: ${data.leader.role}</p>
+        `;
+
+        console.log("Full response:", data);
+
+        // Save leader token temporarily
+        localStorage.setItem(
+            "access_token",
+            data.leader.access_token
+        );
+
+        localStorage.setItem(
+            "team_id",
+            data.id
+        );
+
+    } catch (error) {
+
+        result.style.display = "block";
+
+        result.innerHTML = `
+            <strong>Error:</strong>
+            ${error.message}
+        `;
+
+        console.error(error);
+    }
+
+});
+
+</script>
+
+</body>
+</html>
